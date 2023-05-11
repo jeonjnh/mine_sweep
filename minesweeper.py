@@ -9,8 +9,8 @@ from pygame.locals import QUIT, MOUSEBUTTONDOWN
 WIDTH = 20              # 20개 가로타일
 HEIGHT = 15             # 15개 세로타일
 SIZE = 50               # 타일 사이즈
-NUMBER_OF_BOMS = 20
-EMPTY = 0
+NUMBER_OF_BOMS = 20     # 폭탄 개수
+EMPTY = 0               
 BOMB = 1
 OPENED = 2
 OPEN_COUNT = 0
@@ -22,7 +22,6 @@ pygame.display.set_caption('Mine Sweeper')
 FPSCLOCK = pygame.time.Clock()
 
 #----Functions----#
-
 # function count bomb
 def num_of_bomb(field, x_pos, y_pos):
     count = 0
@@ -66,10 +65,16 @@ def open_tile(field, x_pos, y_pos):
 
 def main():
     running = True
-
+    # define game font
     smallfont = pygame.font.SysFont(None, 36)
-
+    largefont = pygame.font.SysFont(None, 70)
+    message_clear = largefont.render("!!CLEAR!!",True,(0,255,255))
+    message_over = largefont.render("!!GAME OVER!!",True,(0,255,255))
+    message_rect = message_clear.get_rect()
+    message_rect.center = (WIDTH*SIZE/2, HEIGHT*SIZE/2)
     game_over = False
+    clear_game = False
+
     field = [[EMPTY for _ in range(WIDTH)] for _ in range(HEIGHT)]
 
     # set BOMB
@@ -86,12 +91,13 @@ def main():
                 xpos = floor(event.pos[0]/SIZE)
                 ypos = floor(event.pos[1]/SIZE)
                 if field[ypos][xpos] == BOMB:
-                    game_over = True
+                    game_over = True # if BOMB click game_over is True
                 else:
                     open_tile(field,xpos,ypos)
 
         # draw
-        SURFACE.fill((0,0,0))
+        SURFACE.fill((0,0,0)) # background fiil with black
+
         for ypos in range(HEIGHT):
             for xpos in range(WIDTH):
                 tile = field[ypos][xpos]
@@ -99,6 +105,9 @@ def main():
 
                 if tile == EMPTY or tile == BOMB:
                     pygame.draw.rect(SURFACE, (192,192,192), rect)
+                    if game_over and tile == BOMB: # draw BOMB
+                        pygame.draw.ellipse(SURFACE,(255,255,0), rect)
+                        running = False
                 elif tile == OPENED:
                     count = num_of_bomb(field, xpos,ypos)
                     if count > 0:
@@ -111,8 +120,20 @@ def main():
         for index in range(0,HEIGHT*SIZE, SIZE): # draw horizontal line
             pygame.draw.line(SURFACE, (96,96,96), (0, index), (WIDTH*SIZE, index))
 
+        if OPEN_COUNT == WIDTH*HEIGHT - NUMBER_OF_BOMS:
+            clear_game = True
+            running = False
+        # print(clear_game, game_over)
         pygame.display.update()
+    
+    # display message GAME OVER or CLEAR
+    if clear_game:
+        SURFACE.blit(message_clear, message_rect.topleft)
+    elif game_over:
+        SURFACE.blit(message_over, message_rect.topleft)
         
+    pygame.display.update()
+    pygame.time.delay(2000)    
     pygame.quit()
 
 
